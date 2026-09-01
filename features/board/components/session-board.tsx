@@ -174,17 +174,19 @@ export function SessionBoard({
               </p>
             )}
           </div>
-          <div className="rounded-lg border bg-card p-6 shadow-sm">
-            <div
-              role="img"
-              aria-label={`QR code pour rejoindre la session via ${joinUrl}`}
-              className="w-48 h-48"
-              dangerouslySetInnerHTML={{ __html: qrCodeSvg }}
-            />
+          <div className="flex items-center gap-4">
+            <div className="rounded-lg border bg-card p-6 shadow-sm">
+              <div
+                role="img"
+                aria-label={`QR code pour rejoindre la session via ${joinUrl}`}
+                className="w-48 h-48"
+                dangerouslySetInnerHTML={{ __html: qrCodeSvg }}
+              />
+            </div>
+            <code className="text-sm font-bold text-foreground-soft">
+              {joinUrl}
+            </code>
           </div>
-          <code className="text-sm font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-full">
-            {joinUrl}
-          </code>
           <ParticipantsPanel
             sessionId={sessionId}
             initialParticipants={participants}
