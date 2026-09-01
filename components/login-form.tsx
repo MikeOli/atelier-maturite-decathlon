@@ -58,7 +58,7 @@ export function LoginForm({
         alt="Décathlon"
         width={160}
         height={32}
-        className="mx-auto h-8 w-auto"
+        className="mx-auto h-8 w-[160px]"
         priority
       />
       <Card>
