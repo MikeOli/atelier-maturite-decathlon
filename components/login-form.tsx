@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -52,6 +53,14 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Image
+        src="/decathlon-logo.png"
+        alt="Décathlon"
+        width={160}
+        height={32}
+        className="mx-auto h-8 w-auto"
+        priority
+      />
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>

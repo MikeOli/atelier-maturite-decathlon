@@ -15,7 +15,11 @@
     --card-foreground: 227.0 40.7% 17.8%;
     --popover: 0 0% 100%;
     --popover-foreground: 227.0 40.7% 17.8%;
-    --primary: 227.0 40.7% 17.8%;
+    /* Décathlon fork (2026-09-01): --primary/--ring swapped to Decathlon
+       blue (#0082C3 ≈ hsl(200 100% 38%)). Everything else in the palette
+       is unchanged — buttons, links and focus rings pick this up via the
+       CSS vars, no component-level changes needed. */
+    --primary: 200 100% 38%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220.0 18.7% 93.7%;
     --secondary-foreground: 227.0 40.7% 17.8%;
@@ -29,7 +33,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 216.0 26.3% 88.8%;
     --input: 216.0 26.3% 88.8%;
-    --ring: 227.0 40.7% 17.8%;
+    --ring: 200 100% 38%;
     /* Accent pairs — bg/foreground. Names are historical (kept from the
        previous palette to avoid touching every consumer); the colors
        themselves are the new system's: amber ("sand"), teal ("sky"),
@@ -58,8 +62,8 @@
     --card-foreground: 217.5 30.8% 94.9%;
     --popover: 226.7 33.3% 15.9%;
     --popover-foreground: 217.5 30.8% 94.9%;
-    --primary: 217.5 30.8% 94.9%;
-    --primary-foreground: 227.0 40.7% 17.8%;
+    --primary: 200 90% 55%;
+    --primary-foreground: 226.7 31.0% 11.4%;
     --secondary: 226.5 30.7% 19.8%;
     --secondary-foreground: 217.5 30.8% 94.9%;
     --muted: 226.5 30.7% 19.8%;
@@ -70,7 +74,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 225.8 31.1% 23.9%;
     --input: 225.8 31.1% 23.9%;
-    --ring: 217.5 30.8% 83.1%;
+    --ring: 200 90% 55%;
     /* Accent pairs stay light regardless of theme — small colored surfaces
        (chips, cards, hover states) read fine floating on a dark page; only
        full-page/full-control surfaces need the theme-aware tokens above. */

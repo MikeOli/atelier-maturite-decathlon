@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/logout-button";
@@ -74,7 +75,18 @@ export default function AdminPage() {
   return (
     <div className="flex-1 w-full flex flex-col gap-6 p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Espace facilitateur</h1>
+        <div className="flex items-center gap-3">
+          <Image
+            src="/decathlon-logo.png"
+            alt="Décathlon"
+            width={120}
+            height={24}
+            className="h-6 w-auto"
+          />
+          <h1 className="font-display text-2xl font-bold">
+            Espace facilitateur
+          </h1>
+        </div>
         <LogoutButton />
       </div>
       <Suspense fallback={null}>
