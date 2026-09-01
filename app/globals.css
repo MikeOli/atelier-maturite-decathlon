@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Repalette (2026-08-22): cool blue-gray system — replaces the earlier
+       white/pastel "Instrument Sans" palette, per the mobile pilotage
+       mockup provided by the user. */
+    --background: 217.5 30.8% 94.9%;
+    --foreground: 227.0 40.7% 17.8%;
+    --foreground-soft: 227.6 13.7% 41.4%;
+    --foreground-mute: 221.7 9.7% 53.5%;
+    --card: 0 0% 100%;
+    --card-foreground: 227.0 40.7% 17.8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 227.0 40.7% 17.8%;
+    --primary: 227.0 40.7% 17.8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220.0 18.7% 93.7%;
+    --secondary-foreground: 227.0 40.7% 17.8%;
+    --muted: 220.0 18.7% 93.7%;
+    --muted-foreground: 221.7 9.7% 53.5%;
+    --accent: 220.0 18.7% 93.7%;
+    --accent-foreground: 227.0 40.7% 17.8%;
+    /* Story 3.7: kept above the 4.5:1 WCAG AA floor through every repalette
+       — #c1483c measures 4.93:1 against white. */
+    --destructive: 5.4 52.6% 49.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 216.0 26.3% 88.8%;
+    --input: 216.0 26.3% 88.8%;
+    --ring: 227.0 40.7% 17.8%;
+    /* Accent pairs — bg/foreground. Names are historical (kept from the
+       previous palette to avoid touching every consumer); the colors
+       themselves are the new system's: amber ("sand"), teal ("sky"),
+       violet ("lav", no equivalent in the mockup), soft red ("pink"). */
+    --lav: 256.0 48.4% 93.9%;
+    --lav-foreground: 254.8 25.5% 50.0%;
+    --sky: 156.9 31.7% 92.0%;
+    --sky-foreground: 158.3 38.8% 40.4%;
+    --sand: 40.7 58.3% 90.6%;
+    --sand-foreground: 39.1 55.7% 50.4%;
+    --pink: 7.8 56.1% 92.0%;
+    --pink-foreground: 5.4 52.6% 49.6%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 1.125rem;
+  }
+  .dark {
+    --background: 226.7 31.0% 11.4%;
+    --foreground: 217.5 30.8% 94.9%;
+    --foreground-soft: 222.9 19.2% 71.4%;
+    --foreground-mute: 221.7 9.7% 53.5%;
+    --card: 226.7 33.3% 15.9%;
+    --card-foreground: 217.5 30.8% 94.9%;
+    --popover: 226.7 33.3% 15.9%;
+    --popover-foreground: 217.5 30.8% 94.9%;
+    --primary: 217.5 30.8% 94.9%;
+    --primary-foreground: 227.0 40.7% 17.8%;
+    --secondary: 226.5 30.7% 19.8%;
+    --secondary-foreground: 217.5 30.8% 94.9%;
+    --muted: 226.5 30.7% 19.8%;
+    --muted-foreground: 222.9 19.2% 71.4%;
+    --accent: 226.5 30.7% 19.8%;
+    --accent-foreground: 217.5 30.8% 94.9%;
+    --destructive: 5.4 52.6% 58%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 225.8 31.1% 23.9%;
+    --input: 225.8 31.1% 23.9%;
+    --ring: 217.5 30.8% 83.1%;
+    /* Accent pairs stay light regardless of theme — small colored surfaces
+       (chips, cards, hover states) read fine floating on a dark page; only
+       full-page/full-control surfaces need the theme-aware tokens above. */
+    --lav: 256.0 48.4% 93.9%;
+    --lav-foreground: 254.8 25.5% 50.0%;
+    --sky: 156.9 31.7% 92.0%;
+    --sky-foreground: 158.3 38.8% 40.4%;
+    --sand: 40.7 58.3% 90.6%;
+    --sand-foreground: 39.1 55.7% 50.4%;
+    --pink: 7.8 56.1% 92.0%;
+    --pink-foreground: 5.4 52.6% 49.6%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
