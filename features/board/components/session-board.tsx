@@ -165,7 +165,7 @@ export function SessionBoard({
       {card ? (
         <CardDisplay card={card} />
       ) : (
-        <div className="flex flex-col gap-6 items-center">
+        <div className="flex flex-col gap-6 items-center w-full">
           <div className="flex flex-col gap-1 text-center">
             <h2 className="text-xl font-semibold">{deckName}</h2>
             {deckDescription && (
@@ -174,7 +174,7 @@ export function SessionBoard({
               </p>
             )}
           </div>
-          <div className="flex flex-col gap-3 items-center">
+          <div className="w-full border-t pt-6 flex flex-col gap-3 items-center">
             <h3 className="text-sm font-semibold text-foreground-soft uppercase tracking-wide">
               Rejoignez la session
             </h3>
@@ -192,10 +192,12 @@ export function SessionBoard({
               </code>
             </div>
           </div>
-          <ParticipantsPanel
-            sessionId={sessionId}
-            initialParticipants={participants}
-          />
+          <div className="w-full border-t pt-6">
+            <ParticipantsPanel
+              sessionId={sessionId}
+              initialParticipants={participants}
+            />
+          </div>
         </div>
       )}
 
