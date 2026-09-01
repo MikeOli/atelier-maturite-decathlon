@@ -74,20 +74,20 @@ async function ActiveSessionsList() {
 export default function AdminPage() {
   return (
     <div className="flex-1 w-full flex flex-col gap-6 p-6 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Image
-            src="/decathlon-logo.png"
-            alt="Décathlon"
-            width={120}
-            height={24}
-            className="h-6 w-auto"
-          />
+      <div className="flex flex-col gap-2">
+        <Image
+          src="/decathlon-logo.png"
+          alt="Décathlon"
+          width={110}
+          height={22}
+          className="h-5 w-auto"
+        />
+        <div className="flex items-center justify-between">
           <h1 className="font-display text-2xl font-bold">
             Espace facilitateur
           </h1>
+          <LogoutButton />
         </div>
-        <LogoutButton />
       </div>
       <Suspense fallback={null}>
         <AdminIdentity />
