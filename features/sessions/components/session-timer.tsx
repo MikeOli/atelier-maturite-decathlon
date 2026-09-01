@@ -63,7 +63,7 @@ export function SessionTimer({
         <span
           className={cn(
             "block h-full rounded-full transition-[width] duration-1000 ease-linear",
-            expired ? "bg-destructive" : "bg-sand-foreground",
+            expired ? "bg-destructive" : "bg-primary",
           )}
           style={{ width: `${pct}%` }}
         />

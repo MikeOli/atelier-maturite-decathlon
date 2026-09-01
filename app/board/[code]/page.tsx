@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import {
   getPublicSessionSummary,
   getSessionCurrentCard,
@@ -39,6 +40,14 @@ async function BoardScreen({
 
   return (
     <div className="flex-1 w-full flex flex-col items-center justify-center gap-7 p-6 text-center">
+      <Image
+        src="/decathlon-logo.png"
+        alt="Décathlon"
+        width={130}
+        height={26}
+        className="h-[26px] w-[130px]"
+        priority
+      />
       <h1 className="font-display text-[clamp(24px,3.6vw,30px)] font-bold tracking-tight">
         Équipe {session.teamName}
       </h1>

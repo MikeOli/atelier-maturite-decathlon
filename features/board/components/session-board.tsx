@@ -182,7 +182,7 @@ export function SessionBoard({
               dangerouslySetInnerHTML={{ __html: qrCodeSvg }}
             />
           </div>
-          <code className="text-sm font-bold bg-sand text-sand-foreground px-3 py-1.5 rounded-full">
+          <code className="text-sm font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-full">
             {joinUrl}
           </code>
           <ParticipantsPanel
