@@ -80,7 +80,7 @@ export default function AdminPage() {
           alt="Décathlon"
           width={110}
           height={22}
-          className="h-5 w-auto"
+          className="h-[22px] w-[110px] self-start"
         />
         <div className="flex items-center justify-between">
           <h1 className="font-display text-2xl font-bold">
