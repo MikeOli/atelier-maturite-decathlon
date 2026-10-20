@@ -52,6 +52,11 @@ export function SessionBoard({
   const [participants, setParticipants] = useState<Participant[]>(
     initialParticipants,
   );
+  // Derived rather than cleared from the effect above: once votes are
+  // revealed, or between cards, the "who voted" list is empty by
+  // definition, so there is nothing to reset and no stale list to leak.
+  const visibleVotedAvatarKeys = revealed || !card ? [] : votedAvatarKeys;
+
   const cardIdRef = useRef(currentCard?.cardId ?? null);
   const fetchSeqRef = useRef(0);
 
@@ -65,10 +70,7 @@ export function SessionBoard({
   }, [revealed, sessionId, card]);
 
   useEffect(() => {
-    if (revealed || !card) {
-      setVotedAvatarKeys([]);
-      return;
-    }
+    if (revealed || !card) return;
     // Same rationale as VoteCard's getMyVote effect: if the facilitator
     // advances cards twice before this resolves, a stale answer for the
     // now-superseded card must never clobber the current one.
@@ -210,7 +212,7 @@ export function SessionBoard({
             sessionId={sessionId}
             cardId={card.cardId}
             participants={participants}
-            initialVotedAvatarKeys={votedAvatarKeys}
+            initialVotedAvatarKeys={visibleVotedAvatarKeys}
           />
         ))}
     </div>

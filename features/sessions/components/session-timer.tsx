@@ -1,8 +1,52 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { remainingMs, formatRemaining } from "@/lib/timer";
 import { cn } from "@/lib/utils";
+
+/**
+ * The clock is an external, mutable source, so it is read through a store
+ * instead of being mirrored into state from an effect. The snapshot is
+ * only ever recomputed on a tick — never during render — which keeps the
+ * render pure (react-hooks/purity) and leaves the server and the first
+ * client render with null, so nothing can mismatch during hydration.
+ */
+function createClockStore(createdAt: string, durationMinutes: number) {
+  let snapshot: number | null = null;
+  let interval: ReturnType<typeof setInterval> | null = null;
+  const listeners = new Set<() => void>();
+
+  const stop = () => {
+    if (interval !== null) {
+      clearInterval(interval);
+      interval = null;
+    }
+  };
+
+  return {
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+
+      if (interval === null) {
+        snapshot = remainingMs(createdAt, durationMinutes, Date.now());
+        interval = setInterval(() => {
+          snapshot = remainingMs(createdAt, durationMinutes, Date.now());
+          listeners.forEach((l) => l());
+          // Stop ticking once time's up instead of polling Date.now()
+          // forever on a page the user may leave open indefinitely.
+          if (snapshot === 0) stop();
+        }, 1000);
+      }
+
+      return () => {
+        listeners.delete(listener);
+        if (listeners.size === 0) stop();
+      };
+    },
+    getSnapshot: () => snapshot,
+    getServerSnapshot: (): number | null => null,
+  };
+}
 
 export function SessionTimer({
   createdAt,
@@ -11,27 +55,15 @@ export function SessionTimer({
   createdAt: string;
   durationMinutes: number;
 }) {
-  // Computing Date.now() during render would produce a different value on
-  // the server vs. the client's first render (hydration mismatch) — start
-  // at null (identical on both) and compute the real value only after
-  // mount, client-side only.
-  const [remaining, setRemaining] = useState<number | null>(null);
-
-  useEffect(() => {
-    setRemaining(remainingMs(createdAt, durationMinutes, Date.now()));
-
-    const interval = setInterval(() => {
-      const next = remainingMs(createdAt, durationMinutes, Date.now());
-      setRemaining(next);
-      // Stop ticking once time's up instead of polling Date.now() forever
-      // on a page the user may leave open indefinitely.
-      if (next === 0) {
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [createdAt, durationMinutes]);
+  const store = useMemo(
+    () => createClockStore(createdAt, durationMinutes),
+    [createdAt, durationMinutes],
+  );
+  const remaining = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getServerSnapshot,
+  );
 
   if (remaining === null) {
     return null;

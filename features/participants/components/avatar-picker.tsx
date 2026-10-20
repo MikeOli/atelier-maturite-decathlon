@@ -52,24 +52,37 @@ export function AvatarPicker({
     try {
       stored = localStorage.getItem(storageKey(sessionId));
     } catch {
-      setRestoring(false);
-      return;
+      stored = null;
     }
-    if (!stored) {
-      setRestoring(false);
-      return;
-    }
-    findParticipantByClientToken(sessionId, stored)
+
+    // Every setRestoring(false) goes through this chain rather than
+    // returning early: clearing it synchronously here would re-render from
+    // inside the effect (react-hooks/set-state-in-effect). The no-token
+    // case now settles a microtask later, which is invisible to the user.
+    let cancelled = false;
+    const token = stored;
+    const lookup = token
+      ? findParticipantByClientToken(sessionId, token)
+      : Promise.resolve(null);
+
+    lookup
       .then((found) => {
+        if (cancelled || !token) return;
         if (found) {
           setParticipant(found);
-          setClientToken(stored);
+          setClientToken(token);
         } else {
           localStorage.removeItem(storageKey(sessionId));
         }
       })
       .catch(() => {})
-      .finally(() => setRestoring(false));
+      .finally(() => {
+        if (!cancelled) setRestoring(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId]);
 
   useEffect(() => {

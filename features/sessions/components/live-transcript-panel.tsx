@@ -150,8 +150,13 @@ function LiveTranscriptCapture({
   initialDraft: string | null;
 }) {
   const [text, setText] = useState(initialDraft ?? "");
+  // Mirrored in an effect, not during render: the flush below needs the
+  // latest text without re-subscribing speech recognition, and writing a
+  // ref while rendering is unsafe (react-hooks/refs-during-render).
   const textRef = useRef(text);
-  textRef.current = text;
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
 
   useEffect(() => {
     const Recognition = getSpeechRecognitionConstructor();
