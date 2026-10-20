@@ -50,6 +50,74 @@ describe("generateAiSynthesis", () => {
     process.env.GEMINI_API_KEY = originalKey;
   });
 
+  // Ajouté le 2026-10-20 : Google renvoie des 503 "high demand" par
+  // à-coups, une tentative unique rendait la synthèse quasi aléatoire.
+  it("retries a transient 503 and succeeds on the next attempt", async () => {
+    generateContentMock
+      .mockRejectedValueOnce(
+        Object.assign(new Error('{"error":{"code":503,"status":"UNAVAILABLE"}}'), {
+          status: 503,
+        }),
+      )
+      .mockResolvedValueOnce({ text: JSON.stringify(validResponse) });
+
+    const result = await generateAiSynthesis(cards, "Discussion retranscrite ici.");
+
+    expect(generateContentMock).toHaveBeenCalledTimes(2);
+    expect(result?.cards[0]?.cardId).toBe("card-1");
+  });
+
+  // Le quota du palier gratuit est journalier : Google répond par un
+  // RetryInfo de plusieurs heures. Réessayer ne peut pas aboutir et
+  // consommerait le quota restant.
+  it("does not retry a quota error", async () => {
+    generateContentMock.mockRejectedValue(
+      Object.assign(
+        new Error(
+          '{"error":{"code":429,"status":"RESOURCE_EXHAUSTED","message":"Quota exceeded, limit: 20"}}',
+        ),
+        { status: 429 },
+      ),
+    );
+
+    const result = await generateAiSynthesis(cards, "Discussion retranscrite ici.");
+
+    expect(result).toBeNull();
+    expect(generateContentMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives up after exhausting its retries on repeated transient failures", async () => {
+    generateContentMock.mockRejectedValue(
+      Object.assign(new Error('{"error":{"code":503,"status":"UNAVAILABLE"}}'), {
+        status: 503,
+      }),
+    );
+
+    const result = await generateAiSynthesis(cards, "Discussion retranscrite ici.");
+
+    expect(result).toBeNull();
+    expect(generateContentMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("logs the token usage of a successful call", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    generateContentMock.mockResolvedValue({
+      text: JSON.stringify(validResponse),
+      usageMetadata: {
+        promptTokenCount: 4888,
+        candidatesTokenCount: 312,
+        totalTokenCount: 5200,
+      },
+    });
+
+    await generateAiSynthesis(cards, "Discussion retranscrite ici.");
+
+    const logged = logSpy.mock.calls.map((c) => c.join(" ")).join("\n");
+    expect(logged).toContain("4888");
+    expect(logged).toContain("5200");
+    logSpy.mockRestore();
+  });
+
   it("returns null without calling the SDK when there is no transcript", async () => {
     const result = await generateAiSynthesis(cards, null);
 

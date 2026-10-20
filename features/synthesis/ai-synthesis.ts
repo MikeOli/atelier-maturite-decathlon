@@ -226,6 +226,22 @@ export async function generateAiSynthesis(
         },
       });
 
+      // Consommation réelle de l'appel, tracée au même titre que les
+      // échecs : sur le palier gratuit c'est le nombre de requêtes par
+      // jour qui plafonne (20/jour/modèle), pas les tokens — mais sans
+      // cette ligne il n'existe aucun moyen de savoir ce que coûte une
+      // synthèse ni de voir qu'elle a abouti.
+      const usage = response.usageMetadata;
+      console.log(
+        "generateAiSynthesis: ok",
+        JSON.stringify({
+          attempt: attempt + 1,
+          promptTokens: usage?.promptTokenCount,
+          responseTokens: usage?.candidatesTokenCount,
+          totalTokens: usage?.totalTokenCount,
+        }),
+      );
+
       const text = response.text;
       if (!text) {
         console.error("generateAiSynthesis: empty response.text", { response });
