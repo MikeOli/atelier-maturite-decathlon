@@ -12,7 +12,7 @@ export function ConsensusPicker({
   onSubmit: (value: number) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border bg-card p-6 shadow-sm">
+    <div className="flex flex-col gap-2 rounded-lg border bg-card p-6 shadow-xs">
       <p className="text-sm font-medium">
         {value !== null
           ? `Accord retenu : ${value}`

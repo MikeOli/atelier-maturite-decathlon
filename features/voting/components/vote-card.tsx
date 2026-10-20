@@ -201,7 +201,7 @@ export function VoteCard({
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-2xl text-left rounded-lg border bg-card p-6 shadow-sm">
+    <div className="flex flex-col gap-4 w-full max-w-2xl text-left rounded-lg border bg-card p-6 shadow-xs">
       <CardDisplay card={card} />
 
       {revealed ? (

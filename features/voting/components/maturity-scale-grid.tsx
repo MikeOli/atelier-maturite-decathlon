@@ -39,7 +39,7 @@ export function MaturityScaleGrid({
           )}
         >
           <span
-            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold"
             style={{ backgroundColor: bg, color: text }}
           >
             {value}

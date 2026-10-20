@@ -179,7 +179,7 @@ export function SessionBoard({
               Rejoignez la session
             </h3>
             <div className="flex items-center gap-4">
-              <div className="rounded-lg border bg-card p-6 shadow-sm">
+              <div className="rounded-lg border bg-card p-6 shadow-xs">
                 <div
                   role="img"
                   aria-label={`QR code pour rejoindre la session via ${joinUrl}`}

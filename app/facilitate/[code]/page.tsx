@@ -55,13 +55,13 @@ async function FacilitateScreen({
               Équipe {session.teamName}
             </h1>
           </div>
-          <span className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full bg-secondary px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-secondary px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
             Clôturé
           </span>
         </div>
         {currentCard && (
-          <div className="rounded-lg border bg-card p-6 shadow-sm">
+          <div className="rounded-lg border bg-card p-6 shadow-xs">
             <CardDisplay card={currentCard} />
           </div>
         )}
@@ -89,7 +89,7 @@ async function FacilitateScreen({
             Équipe {session.teamName}
           </h1>
         </div>
-        <span className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full bg-sand px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-sand-foreground">
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-sand px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-sand-foreground">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sand-foreground" />
           En cours
         </span>
@@ -103,7 +103,7 @@ async function FacilitateScreen({
           />
         )}
 
-        <div className="rounded-lg border bg-card p-5 shadow-sm">
+        <div className="rounded-lg border bg-card p-5 shadow-xs">
           <ParticipantsPanel
             sessionId={session.id}
             initialParticipants={participants}

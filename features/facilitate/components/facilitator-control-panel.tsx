@@ -181,7 +181,7 @@ export function FacilitatorControlPanel({
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full text-left rounded-lg border bg-card p-5 shadow-sm">
+    <div className="flex flex-col gap-6 w-full text-left rounded-lg border bg-card p-5 shadow-xs">
       <SessionTimer createdAt={createdAt} durationMinutes={durationMinutes} />
 
       {error && (

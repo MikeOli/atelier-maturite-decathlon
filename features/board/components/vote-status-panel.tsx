@@ -84,7 +84,7 @@ export function VoteStatusPanel({
             <li
               key={participant.id}
               className={cn(
-                "flex flex-col items-center rounded-[18px] border bg-card px-[18px] py-5 w-[150px] text-center shadow-sm transition-opacity",
+                "flex flex-col items-center rounded-[18px] border bg-card px-[18px] py-5 w-[150px] text-center shadow-xs transition-opacity",
                 voted ? "opacity-100" : "opacity-40",
               )}
             >

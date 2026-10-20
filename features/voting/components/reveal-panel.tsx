@@ -96,7 +96,7 @@ export function RevealPanel({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border bg-card p-5 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-lg border bg-card p-5 shadow-xs">
       <p className="font-display font-bold">Votes</p>
       {error && (
         <p role="alert" className="text-destructive text-sm">

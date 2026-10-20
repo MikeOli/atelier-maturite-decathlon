@@ -25,7 +25,7 @@ export function RevealedVotes({ votes }: { votes: RevealedVote[] }) {
         return (
           <li
             key={vote.avatarKey}
-            className="flex flex-col items-center rounded-[18px] border bg-card px-[18px] py-5 w-[150px] text-center shadow-sm"
+            className="flex flex-col items-center rounded-[18px] border bg-card px-[18px] py-5 w-[150px] text-center shadow-xs"
           >
             <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-sky text-lg">
               <AvatarGlyph avatar={avatar} size={40} className="h-full w-full" />

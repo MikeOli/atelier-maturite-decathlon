@@ -79,7 +79,7 @@ async function SessionSummary({
         </div>
         <span
           className={cn(
-            "inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-mono text-xs uppercase tracking-wider",
+            "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-mono text-xs uppercase tracking-wider",
             isOpen
               ? "bg-sand text-sand-foreground"
               : "bg-secondary text-muted-foreground",
@@ -97,7 +97,7 @@ async function SessionSummary({
         </span>
       </div>
 
-      <div className="rounded-lg border bg-card p-5 shadow-sm">
+      <div className="rounded-lg border bg-card p-5 shadow-xs">
         <h2 className="font-display mb-3.5 text-sm font-bold">Liens</h2>
         <div className="flex flex-col gap-3.5">
           <div>
@@ -108,7 +108,7 @@ async function SessionSummary({
               <div
                 role="img"
                 aria-label={`QR code pour rejoindre la session via ${joinUrl}`}
-                className="h-24 w-24 flex-shrink-0 rounded-md border bg-background p-1.5"
+                className="h-24 w-24 shrink-0 rounded-md border bg-background p-1.5"
                 dangerouslySetInnerHTML={{ __html: qrCodeSvg }}
               />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -127,7 +127,7 @@ async function SessionSummary({
               <div
                 role="img"
                 aria-label={`QR code pour le pilotage mobile via ${facilitateUrl} — ce lien donne le contrôle complet de la session, ne le partage qu'avec le facilitateur`}
-                className="h-24 w-24 flex-shrink-0 rounded-md border bg-background p-1.5"
+                className="h-24 w-24 shrink-0 rounded-md border bg-background p-1.5"
                 dangerouslySetInnerHTML={{ __html: facilitateQrCodeSvg }}
               />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -162,7 +162,7 @@ async function SessionSummary({
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card p-5 shadow-sm">
+      <div className="rounded-lg border bg-card p-5 shadow-xs">
         <ParticipantsPanel
           sessionId={session.id}
           initialParticipants={participants}

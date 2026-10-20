@@ -114,7 +114,7 @@ function TranscriptionToggle({
   };
 
   return (
-    <div className="rounded-lg border bg-card p-4 shadow-sm flex flex-col gap-2">
+    <div className="rounded-lg border bg-card p-4 shadow-xs flex flex-col gap-2">
       <label className="flex items-center gap-2 text-sm font-medium">
         <input
           type="checkbox"
@@ -254,7 +254,7 @@ function LiveTranscriptCapture({
   }, [sessionId, facilitatorToken]);
 
   return (
-    <div className="rounded-lg border bg-card p-4 shadow-sm flex flex-col gap-2">
+    <div className="rounded-lg border bg-card p-4 shadow-xs flex flex-col gap-2">
       <p className="text-sm font-medium">Transcription live</p>
       <textarea
         readOnly

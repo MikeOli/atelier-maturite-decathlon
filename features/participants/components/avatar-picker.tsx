@@ -176,7 +176,7 @@ export function AvatarPicker({
 
   if (transcriptionEnabled && consentDecision === "pending") {
     return (
-      <div className="flex flex-col gap-4 w-full max-w-md rounded-[18px] border bg-card px-[18px] py-5 text-center shadow-sm">
+      <div className="flex flex-col gap-4 w-full max-w-md rounded-[18px] border bg-card px-[18px] py-5 text-center shadow-xs">
         <p className="text-sm">
           Cette session est transcrite. La discussion est retranscrite en
           texte (aucun audio n&apos;est enregistré), puis anonymisée à des
@@ -231,7 +231,7 @@ export function AvatarPicker({
               onClick={() => handleSelect(avatar.key)}
               aria-disabled={taken}
               className={cn(
-                "flex flex-col items-center gap-2 rounded-[18px] border bg-card px-3 py-4 text-center shadow-sm transition-colors",
+                "flex flex-col items-center gap-2 rounded-[18px] border bg-card px-3 py-4 text-center shadow-xs transition-colors",
                 taken
                   ? "opacity-40 cursor-not-allowed"
                   : "hover:bg-accent cursor-pointer",
