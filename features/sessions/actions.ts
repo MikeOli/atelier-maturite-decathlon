@@ -516,7 +516,7 @@ export async function closeSession(
 
   const { data: session, error: sessionError } = await supabase
     .from("sessions")
-    .select("id, current_card_id, votes_revealed, transcript_draft")
+    .select("id, current_card_id, votes_revealed, transcript_draft, ai_synthesis")
     .eq("id", sessionId)
     .eq("admin_id", authData.claims.sub)
     .maybeSingle();
@@ -563,11 +563,19 @@ export async function closeSession(
   // a retry can never stomp a result already stored by an earlier
   // successful close — same protection `close_session_as_facilitator`
   // already has via `coalesce(p_ai_synthesis, ai_synthesis)`.
+  // Le transcript n'est effacé que lorsqu'une synthèse existe — celle
+  // qu'on vient de produire, ou celle déjà stockée par une clôture
+  // antérieure. Sans cette garde, un échec Gemini (503 passager) fermait
+  // la session sans synthèse et sans transcript, donc sans aucun moyen de
+  // réessayer. Miroir exact de la garde SQL de
+  // close_session_as_facilitator.
+  const hasSynthesis = aiSynthesis !== null || session.ai_synthesis !== null;
+
   const { error: updateError } = await supabase
     .from("sessions")
     .update({
       status: "CLOTUREE",
-      transcript_draft: null,
+      ...(hasSynthesis && { transcript_draft: null }),
       transcription_enabled: false,
       ...(aiSynthesis !== null && { ai_synthesis: aiSynthesis }),
     })

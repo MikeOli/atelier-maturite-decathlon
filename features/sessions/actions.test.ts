@@ -469,6 +469,46 @@ describe("closeSession", () => {
     expect(updateCall?.args[0]).not.toHaveProperty("ai_synthesis");
   });
 
+  // Demande utilisateur (2026-10-20) : ne jamais détruire la matière
+  // première tant qu'on n'en a rien tiré. Un échec Gemini fermait la
+  // session sans synthèse ET sans transcript, donc sans retour possible.
+  it("keeps transcript_draft when no synthesis could be produced", async () => {
+    tableResultQueues.sessions = [
+      {
+        data: { id: "session-1", transcript_draft: "Discussion...", ai_synthesis: null },
+        error: null,
+      },
+      { data: null, error: null },
+    ];
+    generateAiSynthesisMock.mockResolvedValue(null);
+
+    await closeSession("session-1");
+
+    const updateCall = queryCallLog.find((c) => c.method === "update");
+    expect(updateCall?.args[0]).not.toHaveProperty("transcript_draft");
+    expect(updateCall?.args[0]).toMatchObject({ status: "CLOTUREE" });
+  });
+
+  it("clears transcript_draft when a synthesis already exists from an earlier close", async () => {
+    tableResultQueues.sessions = [
+      {
+        data: {
+          id: "session-1",
+          transcript_draft: "Discussion...",
+          ai_synthesis: { generatedAt: "2026-10-20T10:00:00.000Z", cards: [], workshopProposals: [] },
+        },
+        error: null,
+      },
+      { data: null, error: null },
+    ];
+    generateAiSynthesisMock.mockResolvedValue(null);
+
+    await closeSession("session-1");
+
+    const updateCall = queryCallLog.find((c) => c.method === "update");
+    expect(updateCall?.args[0]).toHaveProperty("transcript_draft", null);
+  });
+
   it("calls getSessionSynthesis/generateAiSynthesis with the session's cards and transcript, and stores the result", async () => {
     tableResultQueues.sessions = [
       { data: { id: "session-1", transcript_draft: "Discussion..." }, error: null },

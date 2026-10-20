@@ -136,6 +136,51 @@ export function parseStoredAiSynthesis(value: unknown): AiSynthesis | null {
  * failures of an external, unversioned-by-us API are exactly the kind a
  * developer can't reason about from the code alone.
  */
+/**
+ * Échecs passagers côté Google, qui méritent une nouvelle tentative : 503
+ * UNAVAILABLE ("this model is currently experiencing high demand"), 500
+ * INTERNAL, et les dépassements du délai d'une tentative. Mesuré le
+ * 2026-10-20 sur gemini-3.6-flash avec cette requête exacte : environ un
+ * appel sur trois passait pendant un pic de demande, donc une tentative
+ * unique rendait la synthèse quasi aléatoire.
+ *
+ * Volontairement PAS 429 / RESOURCE_EXHAUSTED : sur le palier gratuit, le
+ * quota est journalier (20 requêtes/jour/modèle) et Google renvoie alors
+ * un RetryInfo de plusieurs heures. Réessayer ne peut pas aboutir et
+ * consomme le quota restant — exactement ce qu'il ne faut pas faire quand
+ * le but est qu'une synthèse finisse par sortir.
+ */
+function isTransientGeminiError(error: unknown): boolean {
+  // Un abort = la tentative a dépassé son délai, pas une requête
+  // invalide : la suivante peut très bien aboutir, dans la limite du
+  // budget global vérifié par l'appelant.
+  if (error instanceof Error && error.name === "AbortError") return true;
+
+  const message = error instanceof Error ? error.message : String(error);
+  if (/RESOURCE_EXHAUSTED|\b429\b/i.test(message)) return false;
+
+  const status = (error as { status?: unknown })?.status;
+  if (typeof status === "number") return [500, 503].includes(status);
+
+  return /\b(500|503)\b|UNAVAILABLE|INTERNAL/i.test(message);
+}
+
+// One retry per entry, after the initial attempt.
+const RETRY_DELAYS_MS = [400, 1200];
+
+// Budget *partagé* par toutes les tentatives, pas par appel : avec un
+// délai par tentative, trois essais lents cumulaient 45s sur une clôture
+// de session que l'animateur attend. Le budget global borne ce pire cas,
+// quitte à ne pas consommer les trois tentatives. Le transcript étant
+// désormais conservé en l'absence de synthèse, abandonner tôt ne perd
+// plus rien — on peut relancer plus tard.
+const TOTAL_BUDGET_MS = 20_000;
+const PER_ATTEMPT_MS = 10_000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function generateAiSynthesis(
   cards: AiSynthesisInputCard[],
   transcript: string | null,
@@ -148,48 +193,71 @@ export async function generateAiSynthesis(
     return null;
   }
 
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      // "gemini-2.5-flash" was retired by Google shortly after this was
-      // written ("no longer available to new users") — confirmed via a
-      // real production 404 on 2026-08-24, caught by the console.error
-      // below. Pin exact model names loosely; Google rotates them.
-      model: "gemini-3.6-flash",
-      contents: buildPrompt(cards, transcript),
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-        // Both callers `await` this before writing the close — a hung
-        // request with no bound would otherwise stall (or, on a serverless
-        // duration limit, hard-fail) the close action itself, defeating
-        // the "never blocks" guarantee (NFR8/NFR14). An abort throws,
-        // which the catch below turns into the same `null` as any other
-        // failure.
-        abortSignal: AbortSignal.timeout(15_000),
-      },
-    });
+  const ai = new GoogleGenAI({ apiKey });
 
-    const text = response.text;
-    if (!text) {
-      console.error("generateAiSynthesis: empty response.text", { response });
+  const deadline = Date.now() + TOTAL_BUDGET_MS;
+
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    const budgetLeft = deadline - Date.now();
+    if (budgetLeft < 2_000) {
+      console.error("generateAiSynthesis: time budget exhausted");
       return null;
     }
 
-    const parsed: unknown = JSON.parse(text);
-    if (!isValidAiSynthesisShape(parsed)) {
-      console.error("generateAiSynthesis: response failed shape validation", { text });
+    try {
+      const response = await ai.models.generateContent({
+        // "gemini-2.5-flash" was retired by Google shortly after this was
+        // written ("no longer available to new users") — confirmed via a
+        // real production 404 on 2026-08-24, caught by the console.error
+        // below. Pin exact model names loosely; Google rotates them.
+        model: "gemini-3.6-flash",
+        contents: buildPrompt(cards, transcript),
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
+          // Both callers `await` this before writing the close — a hung
+          // request with no bound would otherwise stall (or, on a serverless
+          // duration limit, hard-fail) the close action itself, defeating
+          // the "never blocks" guarantee (NFR8/NFR14). Borné aussi par ce
+          // qu'il reste du budget global, pour que les tentatives ne
+          // puissent jamais s'additionner.
+          abortSignal: AbortSignal.timeout(Math.min(PER_ATTEMPT_MS, budgetLeft)),
+        },
+      });
+
+      const text = response.text;
+      if (!text) {
+        console.error("generateAiSynthesis: empty response.text", { response });
+        return null;
+      }
+
+      const parsed: unknown = JSON.parse(text);
+      if (!isValidAiSynthesisShape(parsed)) {
+        console.error("generateAiSynthesis: response failed shape validation", { text });
+        return null;
+      }
+
+      return {
+        generatedAt: new Date().toISOString(),
+        cards: parsed.cards,
+        workshopProposals: parsed.workshopProposals,
+      };
+    } catch (error) {
+      const delay = RETRY_DELAYS_MS[attempt];
+      if (delay !== undefined && isTransientGeminiError(error)) {
+        console.error(
+          `generateAiSynthesis: transient failure, retrying in ${delay}ms`,
+          error,
+        );
+        await sleep(delay);
+        continue;
+      }
+      console.error("generateAiSynthesis: threw", error);
       return null;
     }
-
-    return {
-      generatedAt: new Date().toISOString(),
-      cards: parsed.cards,
-      workshopProposals: parsed.workshopProposals,
-    };
-  } catch (error) {
-    console.error("generateAiSynthesis: threw", error);
-    return null;
   }
+
+  console.error("generateAiSynthesis: exhausted retries");
+  return null;
 }
