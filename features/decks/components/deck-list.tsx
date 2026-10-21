@@ -17,7 +17,7 @@ export async function DeckList() {
   return (
     <ul className="flex flex-col gap-3">
       {decks.map((deck) => (
-        <li key={deck.id}>
+        <li key={deck.id} className="flex flex-col gap-1">
           <Link
             href={`/admin/decks/${deck.id}`}
             className="border rounded-md p-4 flex flex-col gap-1 hover:bg-lav hover:border-transparent transition-colors"
@@ -31,9 +31,48 @@ export async function DeckList() {
             {deck.description && (
               <p className="text-sm text-muted-foreground">{deck.description}</p>
             )}
+            {deck.createdByEmail && (
+              <p className="text-sm text-muted-foreground">
+                Créé par {deck.createdByEmail}
+              </p>
+            )}
           </Link>
+          <DeckLastChange
+            updatedAt={deck.updatedAt}
+            updatedByEmail={deck.updatedByEmail}
+          />
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Sous la cartouche, en retrait : l'information est utile pour savoir à qui
+ * parler d'un deck partagé, mais ne doit pas concurrencer le nom.
+ *
+ * Rien n'est affiché tant que personne n'a modifié le deck : la migration
+ * laisse updated_by à null dans ce cas, et « modifié par personne » serait
+ * un bruit inutile.
+ */
+function DeckLastChange({
+  updatedAt,
+  updatedByEmail,
+}: {
+  updatedAt: string;
+  updatedByEmail: string | null;
+}) {
+  if (!updatedByEmail) return null;
+
+  const date = new Date(updatedAt).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  return (
+    <p className="px-4 text-xs text-foreground-mute">
+      Modifié le {date} par {updatedByEmail}
+    </p>
   );
 }

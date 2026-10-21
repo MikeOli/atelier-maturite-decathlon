@@ -148,6 +148,8 @@ export type Database = {
           id: string
           is_default: boolean
           name: string
+          updated_at: string
+          updated_by: string | null
         }
         Insert: {
           admin_id: string
@@ -156,6 +158,8 @@ export type Database = {
           id?: string
           is_default?: boolean
           name: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           admin_id?: string
@@ -164,8 +168,25 @@ export type Database = {
           id?: string
           is_default?: boolean
           name?: string
+          updated_at?: string
+          updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "decks_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_emails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decks_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "admin_emails"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       participants: {
         Row: {
@@ -321,6 +342,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_emails"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sessions_current_card_id_fkey"
             columns: ["current_card_id"]
             isOneToOne: false
@@ -418,6 +446,21 @@ export type Database = {
       }
     }
     Views: {
+      admin_emails: {
+        Row: {
+          email: string | null
+          id: string | null
+        }
+        Insert: {
+          email?: string | null
+          id?: string | null
+        }
+        Update: {
+          email?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
       session_current_card: {
         Row: {
           bullets: Json | null
@@ -441,30 +484,6 @@ export type Database = {
           transcription_enabled: boolean | null
           votes_revealed: boolean | null
         }
-        Insert: {
-          created_at?: string | null
-          current_card_id?: string | null
-          deck_description?: string | null
-          deck_name?: string | null
-          duration_minutes?: number | null
-          id?: string | null
-          status?: string | null
-          team_name?: string | null
-          transcription_enabled?: boolean | null
-          votes_revealed?: boolean | null
-        }
-        Update: {
-          created_at?: string | null
-          current_card_id?: string | null
-          deck_description?: string | null
-          deck_name?: string | null
-          duration_minutes?: number | null
-          id?: string | null
-          status?: string | null
-          team_name?: string | null
-          transcription_enabled?: boolean | null
-          votes_revealed?: boolean | null
-        }
         Relationships: [
           {
             foreignKeyName: "sessions_current_card_id_fkey"
@@ -484,25 +503,19 @@ export type Database = {
       }
     }
     Functions: {
-      close_session_as_facilitator: {
-        Args: {
-          p_ai_synthesis?: Json | null
-          p_facilitator_token: string
-          p_session_id: string
-        }
-        Returns: undefined
-      }
-      get_session_synthesis_as_facilitator: {
-        Args: { p_facilitator_token: string; p_session_id: string }
-        Returns: {
-          bullets: Json | null
-          card_id: string | null
-          consensus_value: number | null
-          theme: string | null
-          title: string | null
-          transcript_draft: string | null
-        }[]
-      }
+      close_session_as_facilitator:
+        | {
+            Args: { p_facilitator_token: string; p_session_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_ai_synthesis?: Json
+              p_facilitator_token: string
+              p_session_id: string
+            }
+            Returns: undefined
+          }
       get_my_vote: {
         Args: {
           p_card_id: string
@@ -520,17 +533,35 @@ export type Database = {
           id: string
           status: string
           team_name: string
-          transcript_draft: string | null
+          transcript_draft: string
           transcription_enabled: boolean
+        }[]
+      }
+      get_session_synthesis_as_facilitator: {
+        Args: { p_facilitator_token: string; p_session_id: string }
+        Returns: {
+          bullets: Json
+          card_id: string
+          consensus_value: number
+          theme: string
+          title: string
+          transcript_draft: string
         }[]
       }
       get_voters_for_card: {
         Args: { p_card_id: string; p_session_id: string }
-        Returns: { avatar_key: string; avatar_label: string }[]
+        Returns: {
+          avatar_key: string
+          avatar_label: string
+        }[]
       }
       go_to_next_card_as_facilitator: {
         Args: { p_facilitator_token: string; p_session_id: string }
         Returns: string
+      }
+      reorder_cards: {
+        Args: { p_card_ids: string[]; p_deck_id: string }
+        Returns: undefined
       }
       reveal_votes_as_facilitator: {
         Args: { p_facilitator_token: string; p_session_id: string }
@@ -545,20 +576,12 @@ export type Database = {
         }
         Returns: undefined
       }
-      reorder_cards: {
-        Args: { p_card_ids: string[]; p_deck_id: string }
-        Returns: undefined
-      }
       set_transcription_enabled_as_facilitator: {
         Args: {
           p_enabled: boolean
           p_facilitator_token: string
           p_session_id: string
         }
-        Returns: undefined
-      }
-      sync_transcript_draft_as_facilitator: {
-        Args: { p_facilitator_token: string; p_session_id: string; p_text: string }
         Returns: undefined
       }
       start_session_as_facilitator: {
@@ -572,6 +595,14 @@ export type Database = {
           p_participant_id: string
           p_session_id: string
           p_value: number
+        }
+        Returns: undefined
+      }
+      sync_transcript_draft_as_facilitator: {
+        Args: {
+          p_facilitator_token: string
+          p_session_id: string
+          p_text: string
         }
         Returns: undefined
       }
@@ -593,12 +624,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -622,11 +653,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -647,11 +678,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -672,11 +703,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -689,11 +720,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

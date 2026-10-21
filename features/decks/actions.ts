@@ -13,6 +13,11 @@ export type DeckWithCardCount = {
   description: string;
   cardCount: number;
   createdAt: string;
+  /** Adresse de l'animateur qui a créé le deck, null si le compte a été supprimé. */
+  createdByEmail: string | null;
+  updatedAt: string;
+  /** Null tant que le deck n'a jamais été modifié depuis sa création. */
+  updatedByEmail: string | null;
 };
 
 export type DeckDetail = {
@@ -133,7 +138,9 @@ export async function listDecksWithCardCounts(
 ): Promise<DeckWithCardCount[]> {
   const { data, error } = await supabase
     .from("decks")
-    .select("id, name, description, created_at, cards(count)")
+    .select(
+      "id, name, description, created_at, updated_at, admin_id, updated_by, cards(count)",
+    )
     .eq("cards.archived", false)
     .order("created_at", { ascending: true });
 
@@ -142,11 +149,42 @@ export async function listDecksWithCardCounts(
     throw error;
   }
 
-  return (data ?? []).map((deck) => ({
+  const decks = data ?? [];
+
+  // Les adresses vivent dans auth.users, hors de portée de PostgREST : on
+  // les résout via la vue admin_emails, en une requête pour tout le lot
+  // plutôt qu'une par deck. Un échec ici n'empêche pas d'afficher les
+  // decks — on perd les noms, pas le catalogue.
+  const ids = [
+    ...new Set(
+      decks.flatMap((d) => [d.admin_id, d.updated_by].filter(Boolean)),
+    ),
+  ] as string[];
+
+  const emails = new Map<string, string>();
+  if (ids.length > 0) {
+    const { data: rows, error: emailError } = await supabase
+      .from("admin_emails")
+      .select("id, email")
+      .in("id", ids);
+    if (emailError) {
+      describeSupabaseError("listDecksWithCardCounts: admin_emails", emailError);
+    }
+    // La vue expose des colonnes nullables : un compte supprimé ne doit
+    // pas faire tomber le listing.
+    for (const row of rows ?? []) {
+      if (row.id && row.email) emails.set(row.id, row.email);
+    }
+  }
+
+  return decks.map((deck) => ({
     id: deck.id,
     name: deck.name,
     description: deck.description,
     createdAt: deck.created_at,
+    createdByEmail: emails.get(deck.admin_id) ?? null,
+    updatedAt: deck.updated_at,
+    updatedByEmail: deck.updated_by ? (emails.get(deck.updated_by) ?? null) : null,
     cardCount: deck.cards?.[0]?.count ?? 0,
   }));
 }

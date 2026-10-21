@@ -22,6 +22,9 @@ const decks = [
     description: "",
     cardCount: 16,
     createdAt: "",
+      createdByEmail: "a.b@decathlon.com",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      updatedByEmail: null,
   },
 ];
 
