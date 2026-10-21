@@ -18,6 +18,7 @@ import {
 } from "@/lib/auth/allowed-email-domains";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const MINIMUM_PASSWORD_LENGTH = 8;
@@ -32,6 +33,7 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,16 +58,32 @@ export function SignUpForm({
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // Le lien du mail de validation repasse par /auth/confirm, qui
-          // échange le jeton contre une session puis redirige ici.
+          // Conservé pour le cas de repli ci-dessous : si la confirmation
+          // par mail est réactivée un jour côté Supabase, le lien repasse
+          // par /auth/confirm, qui établit la session et redirige ici.
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=/admin`,
         },
       });
       if (error) throw error;
+
+      // Chemin normal : la confirmation par mail étant désactivée, signUp
+      // renvoie directement une session et on entre dans l'espace
+      // animateur sans détour par la boîte mail.
+      if (data.session) {
+        // Même raison que dans LoginForm : vider le cache du routeur avant
+        // de naviguer, pour que le proxy et /admin voient le cookie de
+        // session qui vient d'être posé.
+        router.refresh();
+        router.push("/admin");
+        return;
+      }
+
+      // Repli : la confirmation est encore active côté Supabase. Mieux vaut
+      // le dire que laisser l'utilisateur devant un écran qui ne bouge pas.
       setSent(true);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "";
