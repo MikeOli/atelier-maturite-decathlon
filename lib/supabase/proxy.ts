@@ -52,10 +52,14 @@ export async function updateSession(request: NextRequest) {
   // Match on full path segments so routes like /admin-preview aren't misclassified.
   const { pathname } = request.nextUrl;
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
-  const isAdminLoginRoute =
-    pathname === "/admin/login" || pathname.startsWith("/admin/login/");
+  // Les écrans d'entrée dans l'espace admin doivent rester accessibles sans
+  // session, sinon /admin/signup redirige vers /admin/login et l'inscription
+  // est inatteignable.
+  const isAdminPublicRoute = ["/admin/login", "/admin/signup"].some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 
-  if (isAdminRoute && !isAdminLoginRoute && !user) {
+  if (isAdminRoute && !isAdminPublicRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     return NextResponse.redirect(url);

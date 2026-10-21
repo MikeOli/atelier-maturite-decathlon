@@ -21,7 +21,7 @@ async function DeckDetailContent({
     redirect("/admin/login");
   }
 
-  const deck = await getDeckDetail(deckId, data.claims.sub);
+  const deck = await getDeckDetail(deckId);
   if (!deck) notFound();
 
   return (

@@ -29,9 +29,9 @@ describe("LoginForm", () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.type(screen.getByLabelText(/email/i), "admin@example.com");
-    await user.type(screen.getByLabelText(/password/i), "correct-password");
-    await user.click(screen.getByRole("button", { name: /login/i }));
+    await user.type(screen.getByLabelText(/adresse e-mail/i), "admin@example.com");
+    await user.type(screen.getByLabelText(/mot de passe/i), "correct-password");
+    await user.click(screen.getByRole("button", { name: /se connecter/i }));
 
     expect(signInWithPasswordMock).toHaveBeenCalledWith({
       email: "admin@example.com",
@@ -47,9 +47,9 @@ describe("LoginForm", () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.type(screen.getByLabelText(/email/i), "admin@example.com");
-    await user.type(screen.getByLabelText(/password/i), "wrong-password");
-    await user.click(screen.getByRole("button", { name: /login/i }));
+    await user.type(screen.getByLabelText(/adresse e-mail/i), "admin@example.com");
+    await user.type(screen.getByLabelText(/mot de passe/i), "wrong-password");
+    await user.click(screen.getByRole("button", { name: /se connecter/i }));
 
     const message = await screen.findByText(/invalid login credentials/i);
     expect(message).toBeInTheDocument();

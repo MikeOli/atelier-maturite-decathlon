@@ -41,16 +41,22 @@ export type CardDetail = {
 const POSTGRES_UNIQUE_VIOLATION = "23505";
 
 /**
- * Ensures the current admin has at least the default "Maturité Produit" deck.
- * Idempotent: does nothing if the admin already has any deck. Called on first
- * access to the decks list rather than via a signup trigger, so it also
- * covers the admin account that already existed before this feature shipped.
+ * Ensures the *shared* catalogue holds at least the default "Maturité
+ * Produit" deck. Idempotent: does nothing as soon as any deck exists.
+ * Called on first access to the decks list rather than via a signup
+ * trigger, so it also covers accounts that predate this feature.
  *
- * A DB-level unique index (decks_one_default_per_admin_idx, on admin_id where
- * is_default) is the actual race-condition guard: two concurrent first
- * requests can both pass the count check below, but only one insert with
- * is_default=true will succeed — the loser's unique-violation is treated as
- * "already seeded by the other request" rather than an error.
+ * Depuis que les decks sont communs (2026-10-21), le compte à vérifier est
+ * global et non plus celui de l'admin : sinon chaque nouvelle inscription
+ * ajouterait sa propre copie de « Maturité Produit » au catalogue partagé.
+ * L'admin qui déclenche l'amorçage en reste le créateur, donc le seul à
+ * pouvoir le modifier.
+ *
+ * A DB-level unique index (decks_one_default_idx, on is_default) is the
+ * actual race-condition guard: two concurrent first requests can both pass
+ * the count check below, but only one insert with is_default=true will
+ * succeed — the loser's unique-violation is treated as "already seeded by
+ * the other request" rather than an error.
  */
 export async function ensureDefaultDeck(
   supabase: SupabaseClient<Database>,
@@ -58,8 +64,7 @@ export async function ensureDefaultDeck(
 ): Promise<void> {
   const { count, error: countError } = await supabase
     .from("decks")
-    .select("id", { count: "exact", head: true })
-    .eq("admin_id", adminId);
+    .select("id", { count: "exact", head: true });
 
   if (countError) throw countError;
   if (count && count > 0) return;
@@ -118,16 +123,19 @@ export async function listDecksWithCardCounts(
   }));
 }
 
-export async function getDeckDetail(
-  deckId: string,
-  adminId: string,
-): Promise<DeckDetail | null> {
+/**
+ * Plus de filtre sur admin_id depuis que le catalogue est commun : tout
+ * admin connecté peut ouvrir n'importe quel deck. La lecture est cadrée
+ * par la politique « Decks are readable by every admin », et l'écriture
+ * reste réservée au créateur par les politiques d'update/delete — un
+ * filtre ici ne protégerait rien de plus et masquerait les decks partagés.
+ */
+export async function getDeckDetail(deckId: string): Promise<DeckDetail | null> {
   const supabase = await createClient();
   const { data: deck, error: deckError } = await supabase
     .from("decks")
     .select("id, name, description, is_default")
     .eq("id", deckId)
-    .eq("admin_id", adminId)
     .maybeSingle();
 
   if (deckError || !deck) return null;
