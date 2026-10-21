@@ -38,6 +38,24 @@ export type CardDetail = {
   orderIndex: number;
 };
 
+/**
+ * Les erreurs Supabase ne sont pas des Error : relayées telles quelles,
+ * Next n'en affiche qu'un digest et un corps vide ("Error: {\"message\":\"\"}"),
+ * ce qui a rendu un 500 de /admin indiagnosticable le 2026-10-21. On trace
+ * les champs utiles avant de relancer.
+ */
+function describeSupabaseError(context: string, error: unknown): void {
+  const e = error as { code?: string; message?: string; details?: string; hint?: string };
+  console.error(
+    `${context}: ${JSON.stringify({
+      code: e?.code,
+      message: e?.message,
+      details: e?.details,
+      hint: e?.hint,
+    })}`,
+  );
+}
+
 const POSTGRES_UNIQUE_VIOLATION = "23505";
 
 /**
@@ -66,7 +84,10 @@ export async function ensureDefaultDeck(
     .from("decks")
     .select("id", { count: "exact", head: true });
 
-  if (countError) throw countError;
+  if (countError) {
+    describeSupabaseError("ensureDefaultDeck: count", countError);
+    return;
+  }
   if (count && count > 0) return;
 
   const { data: deck, error: deckError } = await supabase
@@ -82,7 +103,10 @@ export async function ensureDefaultDeck(
 
   if (deckError) {
     if (deckError.code === POSTGRES_UNIQUE_VIOLATION) return;
-    throw deckError;
+    // Amorcer le catalogue est un confort, pas une condition d'accès :
+    // échouer ici ne doit pas priver l'animateur de tout son espace.
+    describeSupabaseError("ensureDefaultDeck: insert deck", deckError);
+    return;
   }
 
   const { error: cardsError } = await supabase.from("cards").insert(
@@ -99,7 +123,8 @@ export async function ensureDefaultDeck(
     // Roll back the orphaned deck rather than leaving a cardless deck behind
     // that future loads would silently treat as "already seeded".
     await supabase.from("decks").delete().eq("id", deck.id);
-    throw cardsError;
+    describeSupabaseError("ensureDefaultDeck: insert cards", cardsError);
+    return;
   }
 }
 
@@ -112,7 +137,10 @@ export async function listDecksWithCardCounts(
     .eq("cards.archived", false)
     .order("created_at", { ascending: true });
 
-  if (error) throw error;
+  if (error) {
+    describeSupabaseError("listDecksWithCardCounts", error);
+    throw error;
+  }
 
   return (data ?? []).map((deck) => ({
     id: deck.id,
