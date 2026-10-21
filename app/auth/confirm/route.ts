@@ -8,6 +8,22 @@ function failed(message: string): never {
 }
 
 /**
+ * Traduit les refus les plus courants en quelque chose d'actionnable.
+ * `otp_expired` est le cas fréquent et trompeur : le lien d'un mail de
+ * validation est à usage unique, et certains clients de messagerie ou
+ * antivirus le pré-chargent, donc le consomment avant même le clic.
+ */
+function explainAuthError(code: string | null, description: string | null): string {
+  if (code === "otp_expired") {
+    return "Ce lien de validation a expiré ou a déjà été utilisé. Refaites une demande pour en recevoir un nouveau.";
+  }
+  if (code === "access_denied") {
+    return "Lien de validation refusé. Il a probablement déjà servi : demandez-en un nouveau.";
+  }
+  return description ?? code ?? "Lien de validation refusé.";
+}
+
+/**
  * Point d'arrivée des liens de validation envoyés par mail.
  *
  * Gère les deux formes possibles, parce que la forme reçue dépend d'un
@@ -31,6 +47,23 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
 
+  // Quand le jeton est refusé, Supabase ne redirige pas sans rien : il
+  // place la raison dans l'URL. Les ignorer, comme c'était le cas,
+  // transformait un « lien déjà utilisé » parfaitement explicite en un
+  // « lien incomplet ou expiré » qui n'aide personne.
+  const errorCode = searchParams.get("error_code");
+  const errorDescription = searchParams.get("error_description");
+  if (errorCode || searchParams.get("error")) {
+    console.error(
+      `auth/confirm: refus de Supabase ${JSON.stringify({
+        error: searchParams.get("error"),
+        errorCode,
+        errorDescription,
+      })}`,
+    );
+    failed(explainAuthError(errorCode, errorDescription));
+  }
+
   const supabase = await createClient();
 
   if (code) {
@@ -45,5 +78,12 @@ export async function GET(request: NextRequest) {
     redirect(next);
   }
 
-  failed("Lien de confirmation incomplet ou expiré.");
+  console.error(
+    `auth/confirm: aucun jeton exploitable, parametres recus = ${JSON.stringify(
+      Object.fromEntries(searchParams),
+    )}`,
+  );
+  failed(
+    "Lien de validation incomplet. S'il a été ouvert depuis un autre navigateur que celui de l'inscription, recommencez depuis le même.",
+  );
 }
