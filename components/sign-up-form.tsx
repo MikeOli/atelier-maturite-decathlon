@@ -69,14 +69,28 @@ export function SignUpForm({
       setSent(true);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "";
+
       // Le déclencheur de domaine remonte au client sous une forme
       // générique ("Database error saving new user") : sans ce rattrapage,
       // une adresse hors Décathlon afficherait un message incompréhensible.
-      setError(
-        /database error|unexpected_failure/i.test(message)
-          ? `Inscription refusée. Seules les adresses ${ALLOWED_EMAIL_DOMAINS.map((d) => `@${d}`).join(" ou ")} sont autorisées.`
-          : message || "Impossible de créer le compte.",
-      );
+      if (/database error|unexpected_failure/i.test(message)) {
+        setError(
+          `Inscription refusée. Seules les adresses ${ALLOWED_EMAIL_DOMAINS.map((d) => `@${d}`).join(" ou ")} sont autorisées.`,
+        );
+        return;
+      }
+
+      // Le service d'envoi intégré à Supabase est plafonné à 2 mails par
+      // heure. Le message brut ("email rate limit exceeded") laisse croire
+      // à un refus du compte, alors qu'il n'y a qu'à attendre.
+      if (/rate limit/i.test(message)) {
+        setError(
+          "Trop de mails de validation ont été envoyés récemment. Le service d'envoi est limité à 2 par heure : réessayez plus tard.",
+        );
+        return;
+      }
+
+      setError(message || "Impossible de créer le compte.");
     } finally {
       setIsLoading(false);
     }
