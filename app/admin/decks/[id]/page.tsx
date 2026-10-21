@@ -52,7 +52,7 @@ export default function DeckDetailPage({
         href="/admin?tab=decks"
         className="self-start text-sm text-foreground-soft hover:text-foreground"
       >
-        ← Retour à mes decks
+        ← Retour aux decks
       </Link>
       <Suspense fallback={null}>
         <DeckDetailContent params={params} />

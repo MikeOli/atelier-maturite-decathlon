@@ -18,7 +18,7 @@ export function NewSessionForm({ decks }: { decks: DeckWithCardCount[] }) {
       <p className="text-sm text-muted-foreground">
         Tu n&apos;as pas encore de deck. Crée-en un depuis{" "}
         <a href="/admin?tab=decks" className="underline">
-          Mes decks
+          Les decks
         </a>{" "}
         avant de lancer une session.
       </p>

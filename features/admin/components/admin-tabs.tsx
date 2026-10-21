@@ -63,7 +63,7 @@ export function AdminTabs({
           variant={tab === "decks" ? "default" : "outline"}
           onClick={() => selectTab("decks")}
         >
-          Mes decks
+          Les decks
         </Button>
         <Button
           type="button"
