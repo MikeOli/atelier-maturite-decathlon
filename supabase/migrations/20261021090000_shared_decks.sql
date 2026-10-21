@@ -73,6 +73,27 @@ create policy "Admins write cards of the decks they created"
 -- comptes.
 drop index if exists decks_one_default_per_admin_idx;
 
+-- Le modèle privé a laissé un deck par défaut PAR admin : l'index global
+-- ci-dessous les refuserait tous sauf un (échec 23505 constaté au premier
+-- passage). On garde le plus ancien — le deck d'origine — et on retire le
+-- drapeau aux autres.
+--
+-- Rien n'est supprimé : ces decks restent dans le catalogue commun, leurs
+-- cartes aussi, et les sessions qui les référencent ne bougent pas. Seule
+-- la notion de « deck par défaut » est recentrée sur un seul. Le drapeau
+-- ne sert qu'à deux choses : empêcher sa suppression, et savoir si le
+-- catalogue a déjà été amorcé.
+update public.decks
+  set is_default = false
+  where is_default
+    and id is distinct from (
+      select id
+      from public.decks
+      where is_default
+      order by created_at asc, id asc
+      limit 1
+    );
+
 create unique index if not exists decks_one_default_idx
   on public.decks (is_default)
   where is_default;
