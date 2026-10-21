@@ -90,7 +90,7 @@ describe("getSessionSynthesis", () => {
       { data: { value: 5 }, error: null },
     ];
 
-    const result = await getSessionSynthesis("session-1", "admin-1");
+    const result = await getSessionSynthesis("session-1");
 
     expect(result).toEqual([
       {
@@ -124,7 +124,7 @@ describe("getSessionSynthesis", () => {
     tableResultQueues.cards = [{ data: cardsFixture, error: null }];
     tableResultQueues.card_consensus = [{ data: { value: 3 }, error: null }];
 
-    const result = await getSessionSynthesis("session-1", "admin-1");
+    const result = await getSessionSynthesis("session-1");
 
     expect(result).toHaveLength(1);
     expect(result[0]?.cardId).toBe("card-1");
@@ -144,7 +144,7 @@ describe("getSessionSynthesis", () => {
     tableResultQueues.cards = [{ data: cardsFixture, error: null }];
     tableResultQueues.card_consensus = [{ data: null, error: null }];
 
-    const result = await getSessionSynthesis("session-1", "admin-1");
+    const result = await getSessionSynthesis("session-1");
 
     expect(result.map((r) => r.cardId)).toEqual(["card-1"]);
   });
@@ -158,7 +158,7 @@ describe("getSessionSynthesis", () => {
     ];
     tableResultQueues.cards = [{ data: cardsFixture, error: null }];
 
-    const result = await getSessionSynthesis("session-1", "admin-1");
+    const result = await getSessionSynthesis("session-1");
 
     expect(result).toEqual([]);
   });
@@ -166,7 +166,7 @@ describe("getSessionSynthesis", () => {
   it("returns an empty array when the session doesn't belong to the admin", async () => {
     tableResultQueues.sessions = [{ data: null, error: null }];
 
-    const result = await getSessionSynthesis("session-1", "admin-1");
+    const result = await getSessionSynthesis("session-1");
 
     expect(result).toEqual([]);
   });
@@ -188,7 +188,7 @@ describe("getSessionSynthesis", () => {
     tableResultQueues.cards = [{ data: cardsFixture, error: null }];
     tableResultQueues.card_consensus = [{ data: null, error: null }];
 
-    const result = await getSessionSynthesis("session-1", "admin-1");
+    const result = await getSessionSynthesis("session-1");
 
     expect(result).toEqual([
       {

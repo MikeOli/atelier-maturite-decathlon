@@ -20,7 +20,7 @@ export async function CompletedSessionsList() {
     redirect("/admin/login");
   }
 
-  const sessions = await listCompletedSessionsForAdmin(data.claims.sub);
+  const sessions = await listCompletedSessionsForAdmin();
 
   if (sessions.length === 0) {
     return (

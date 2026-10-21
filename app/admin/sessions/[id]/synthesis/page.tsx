@@ -22,10 +22,10 @@ async function SynthesisScreen({
     redirect("/admin/login");
   }
 
-  const session = await getSessionDetail(sessionId, data.claims.sub);
+  const session = await getSessionDetail(sessionId);
   if (!session) notFound();
 
-  const cards = await getSessionSynthesis(session.id, data.claims.sub);
+  const cards = await getSessionSynthesis(session.id);
   const themes = aggregateByTheme(cards);
 
   return (

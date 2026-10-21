@@ -40,7 +40,7 @@ async function ActiveSessionsList() {
     redirect("/admin/login");
   }
 
-  const sessions = await listActiveSessionsForAdmin(data.claims.sub);
+  const sessions = await listActiveSessionsForAdmin();
 
   if (sessions.length === 0) {
     return (

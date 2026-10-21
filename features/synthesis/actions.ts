@@ -25,7 +25,6 @@ export type CardSynthesis = {
  */
 export async function getSessionSynthesis(
   sessionId: string,
-  adminId: string,
 ): Promise<CardSynthesis[]> {
   const supabase = await createClient();
 
@@ -33,7 +32,6 @@ export async function getSessionSynthesis(
     .from("sessions")
     .select("deck_id, current_card_id, votes_revealed")
     .eq("id", sessionId)
-    .eq("admin_id", adminId)
     .maybeSingle();
 
   if (sessionError || !session) return [];

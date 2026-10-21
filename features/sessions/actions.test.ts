@@ -528,7 +528,7 @@ describe("closeSession", () => {
     const result = await closeSession("session-1");
 
     expect(result).toEqual({ success: true, data: null });
-    expect(getSessionSynthesisMock).toHaveBeenCalledWith("session-1", "admin-1");
+    expect(getSessionSynthesisMock).toHaveBeenCalledWith("session-1");
     expect(generateAiSynthesisMock).toHaveBeenCalledWith(cards, "Discussion...");
     expect(queryCallLog).toContainEqual({
       method: "update",
@@ -1615,7 +1615,7 @@ describe("listActiveSessionsForAdmin", () => {
       },
     ];
 
-    const result = await listActiveSessionsForAdmin("admin-1");
+    const result = await listActiveSessionsForAdmin();
 
     expect(result).toEqual([
       { id: "session-2", teamName: "Beta", createdAt: "2026-08-21T09:00:00.000Z" },
@@ -1626,7 +1626,7 @@ describe("listActiveSessionsForAdmin", () => {
   it("returns an empty array when the admin has no EN_COURS session", async () => {
     tableResultQueues.sessions = [{ data: [], error: null }];
 
-    const result = await listActiveSessionsForAdmin("admin-1");
+    const result = await listActiveSessionsForAdmin();
 
     expect(result).toEqual([]);
   });
@@ -1636,7 +1636,7 @@ describe("listActiveSessionsForAdmin", () => {
       { data: null, error: { message: "boom" } },
     ];
 
-    const result = await listActiveSessionsForAdmin("admin-1");
+    const result = await listActiveSessionsForAdmin();
 
     expect(result).toEqual([]);
   });
@@ -1662,7 +1662,7 @@ describe("listCompletedSessionsForAdmin", () => {
       },
     ];
 
-    const result = await listCompletedSessionsForAdmin("admin-1");
+    const result = await listCompletedSessionsForAdmin();
 
     expect(result).toEqual([
       { id: "session-2", teamName: "Beta", createdAt: "2026-08-21T09:00:00.000Z" },
@@ -1673,7 +1673,7 @@ describe("listCompletedSessionsForAdmin", () => {
   it("returns an empty array when the admin has no CLOTUREE session", async () => {
     tableResultQueues.sessions = [{ data: [], error: null }];
 
-    const result = await listCompletedSessionsForAdmin("admin-1");
+    const result = await listCompletedSessionsForAdmin();
 
     expect(result).toEqual([]);
   });
@@ -1681,7 +1681,7 @@ describe("listCompletedSessionsForAdmin", () => {
   it("returns an empty array on a Supabase error", async () => {
     tableResultQueues.sessions = [{ data: null, error: { message: "boom" } }];
 
-    const result = await listCompletedSessionsForAdmin("admin-1");
+    const result = await listCompletedSessionsForAdmin();
 
     expect(result).toEqual([]);
   });

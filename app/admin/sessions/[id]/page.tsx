@@ -35,7 +35,7 @@ async function SessionSummary({
     redirect("/admin/login");
   }
 
-  const session = await getSessionDetail(sessionId, data.claims.sub);
+  const session = await getSessionDetail(sessionId);
   if (!session) notFound();
 
   const origin = await getOrigin();

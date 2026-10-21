@@ -46,7 +46,6 @@ export async function createSession(
     .from("decks")
     .select("id")
     .eq("id", deckId)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
   if (deckError || !deck) {
@@ -108,14 +107,13 @@ export type ActiveSessionSummary = {
  * `ActionResult<T>`, since this isn't a mutation. Never returns `CLOTUREE`
  * sessions — that's archival (FR21/Story 5.4), a separate concern.
  */
-export async function listActiveSessionsForAdmin(
-  adminId: string,
-): Promise<ActiveSessionSummary[]> {
+export async function listActiveSessionsForAdmin(): Promise<
+  ActiveSessionSummary[]
+> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("sessions")
     .select("id, team_name, created_at")
-    .eq("admin_id", adminId)
     .eq("status", "EN_COURS")
     .order("created_at", { ascending: false });
 
@@ -136,14 +134,13 @@ export async function listActiveSessionsForAdmin(
  * pattern as `listActiveSessionsForAdmin`, reusing `ActiveSessionSummary`
  * as-is: identical shape, no reason for a separate type.
  */
-export async function listCompletedSessionsForAdmin(
-  adminId: string,
-): Promise<ActiveSessionSummary[]> {
+export async function listCompletedSessionsForAdmin(): Promise<
+  ActiveSessionSummary[]
+> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("sessions")
     .select("id, team_name, created_at")
-    .eq("admin_id", adminId)
     .eq("status", "CLOTUREE")
     .order("created_at", { ascending: false });
 
@@ -182,7 +179,6 @@ export async function deleteSession(
     .from("sessions")
     .delete()
     .eq("id", sessionId)
-    .eq("admin_id", authData.claims.sub)
     .eq("status", "CLOTUREE")
     .select("id");
 
@@ -218,7 +214,6 @@ export type SessionDetail = {
 
 export async function getSessionDetail(
   sessionId: string,
-  adminId: string,
 ): Promise<SessionDetail | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -227,7 +222,6 @@ export async function getSessionDetail(
       "id, team_name, duration_minutes, status, decks(name), created_at, facilitator_token, transcription_enabled, transcript_draft, ai_synthesis",
     )
     .eq("id", sessionId)
-    .eq("admin_id", adminId)
     .single();
 
   if (error || !data) return null;
@@ -455,7 +449,6 @@ export async function revealVotes(
     .from("sessions")
     .select("id, status")
     .eq("id", sessionId)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
   if (sessionError || !session) {
@@ -518,7 +511,6 @@ export async function closeSession(
     .from("sessions")
     .select("id, current_card_id, votes_revealed, transcript_draft, ai_synthesis")
     .eq("id", sessionId)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
   if (sessionError || !session) {
@@ -551,7 +543,7 @@ export async function closeSession(
   // never throws) can be stored in the same update. Must be awaited here,
   // never run in parallel with the update below, since the update needs
   // its result.
-  const cards = await getSessionSynthesis(sessionId, authData.claims.sub);
+  const cards = await getSessionSynthesis(sessionId);
   const aiSynthesis = await generateAiSynthesis(cards, session.transcript_draft ?? null);
 
   // Adversarial review finding (2026-08-24): closing is idempotent by
@@ -642,7 +634,6 @@ export async function goToNextCard(
     .from("sessions")
     .select("deck_id, current_card_id, votes_revealed, status")
     .eq("id", sessionId)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
   if (sessionError || !session) {
@@ -769,7 +760,6 @@ export async function startSession(
     .from("sessions")
     .select("deck_id, current_card_id, status")
     .eq("id", sessionId)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
   if (sessionError || !session) {
@@ -1151,7 +1141,6 @@ export async function setCardConsensus(
     .from("sessions")
     .select("id, status, current_card_id")
     .eq("id", sessionId)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
   if (sessionError || !session) {
