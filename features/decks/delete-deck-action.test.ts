@@ -72,7 +72,7 @@ describe("deleteDeck", () => {
     const result = await deleteDeck(DECK_ID);
 
     expect(result.success).toBe(false);
-    expect((result as { error: string }).error).toContain("utilisé par une ou plusieurs sessions");
+    expect((result as { error: string }).error).toContain("y compris clôturées");
   });
 
   it("distingue un identifiant malformé d'un deck absent", async () => {

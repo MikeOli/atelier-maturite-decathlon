@@ -64,8 +64,11 @@ export async function deleteDeck(deckId: string): Promise<ActionResult<null>> {
     if (error.code === POSTGRES_FOREIGN_KEY_VIOLATION) {
       return {
         success: false,
+        // Préciser « y compris clôturées » : l'écran d'accueil ne liste
+        // que les sessions en cours, donc un deck refusé pour cause de
+        // session passée donnait l'impression d'un bug.
         error:
-          "Ce deck est utilisé par une ou plusieurs sessions et ne peut pas être supprimé.",
+          "Ce deck est utilisé par des sessions, y compris clôturées, et ne peut pas être supprimé sans effacer leur historique.",
       };
     }
     return { success: false, error: "Impossible de supprimer le deck." };
