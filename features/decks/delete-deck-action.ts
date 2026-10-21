@@ -15,6 +15,11 @@ const deckIdSchema = z.string().uuid("Deck invalide.");
  * The default deck is blocked client-side (DeleteDeckButton hides the
  * button) but also re-checked here since `ensureDefaultDeck` would
  * silently reseed it on the admin's next deck-list load anyway.
+ *
+ * N'importe quel animateur peut supprimer n'importe quel deck depuis que
+ * le catalogue est commun (2026-10-21) : les protections qui comptent
+ * sont le deck par défaut et les decks déjà utilisés par une session,
+ * pas la propriété.
  */
 export async function deleteDeck(deckId: string): Promise<ActionResult<null>> {
   const supabase = await createClient();
@@ -33,11 +38,14 @@ export async function deleteDeck(deckId: string): Promise<ActionResult<null>> {
     .from("decks")
     .select("is_default")
     .eq("id", parsed.data)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
+  // Plus de filtre sur le créateur : le catalogue est commun et se gère
+  // collectivement. « Deck invalide » couvrait aussi ce cas, ce qui
+  // affichait un message incompréhensible à qui tentait de supprimer le
+  // deck d'un collègue.
   if (deckError || !deck) {
-    return { success: false, error: "Deck invalide." };
+    return { success: false, error: "Deck introuvable." };
   }
 
   if (deck.is_default) {
@@ -50,8 +58,7 @@ export async function deleteDeck(deckId: string): Promise<ActionResult<null>> {
   const { error } = await supabase
     .from("decks")
     .delete()
-    .eq("id", parsed.data)
-    .eq("admin_id", authData.claims.sub);
+    .eq("id", parsed.data);
 
   if (error) {
     if (error.code === POSTGRES_FOREIGN_KEY_VIOLATION) {

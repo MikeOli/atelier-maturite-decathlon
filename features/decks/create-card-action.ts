@@ -34,7 +34,6 @@ export async function createCard(
     .from("decks")
     .select("id")
     .eq("id", deckId)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
   if (deckError || !deck) {

@@ -28,7 +28,6 @@ export async function reorderCards(
     .from("decks")
     .select("id")
     .eq("id", parsed.data.deckId)
-    .eq("admin_id", authData.claims.sub)
     .maybeSingle();
 
   if (deckError || !deck) {
